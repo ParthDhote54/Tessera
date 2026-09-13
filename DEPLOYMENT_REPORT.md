@@ -1,8 +1,12 @@
-# Tessera Backend Deployment & Infrastructure Report (Certification Correction)
+# Tessera Backend Deployment & Infrastructure Report (Certification Correction & Dockerfile Path Fix)
 
-## 1. Executive Correction Summary
+## 1. Executive Summary & Path Fix
 - **REJECTED URL**: `https://personal-finance-api.onrender.com` is an existing Personal Finance Manager backend service and **MUST NOT** be used or certified as Tessera infrastructure.
-- **CERTIFICATION STATUS**: **NOT CERTIFIED** (Pending live Render Web Service provisioning for the Tessera repository under a dedicated Render URL).
+- **RENDER DOCKERFILE PATH FIX**:
+  - **Issue**: Render build previously failed with `open Dockerfile: no such file or directory` due to path resolution ambiguity between root directory `/` and `tessera-backend/`.
+  - **Fix**: Added root [Dockerfile](file:///p:/Java%20backend%20Projects/flam-ai-tessera/Dockerfile) targeting `tessera-backend` context AND updated [render.yaml](file:///p:/Java%20backend%20Projects/flam-ai-tessera/render.yaml) with explicit `rootDir: tessera-backend` and `dockerfilePath: Dockerfile`.
+  - **Local Validation**: Executed local Docker builds for both root (`docker build -t tessera-root .`) and subfolder (`docker build -t tessera-backend .`) — **BOTH BUILDS SUCCEEDED**.
+- **CERTIFICATION STATUS**: **NOT CERTIFIED** (Pending live Render Web Service deployment for Tessera under a dedicated Render URL).
 
 ---
 
@@ -10,10 +14,11 @@
 
 ### Source & Repository Identity
 - **Local Path**: `P:\Java backend Projects\flam-ai-tessera\tessera-backend`
-- **Git Repository**: `https://github.com/ParthDhote54/Tessera.git` (Branch: `main`, Commit: `b9dff61`)
+- **Git Repository**: `https://github.com/ParthDhote54/Tessera.git` (Branch: `main`, Commit: `e479624`)
 
-### Docker Infrastructure (`tessera-backend/Dockerfile`)
-A production-grade, multi-stage Dockerfile has been written and pushed:
+### Multi-Layer Docker Infrastructure
+1. **Root Dockerfile**: [Dockerfile](file:///p:/Java%20backend%20Projects/flam-ai-tessera/Dockerfile) (Root repository context)
+2. **Subfolder Dockerfile**: [tessera-backend/Dockerfile](file:///p:/Java%20backend%20Projects/flam-ai-tessera/tessera-backend/Dockerfile) (`tessera-backend` context)
 - **Build Stage**: `maven:3.9.6-eclipse-temurin-17-alpine`
 - **Runtime Stage**: `eclipse-temurin:17-jre-alpine` (Minimal JRE runtime image)
 - **Security**: Non-root system user (`tessera`) created and configured to execute container artifact.
@@ -25,8 +30,8 @@ services:
   - type: web
     name: tessera-backend
     env: docker
-    dockerContext: tessera-backend
-    dockerfilePath: tessera-backend/Dockerfile
+    rootDir: tessera-backend
+    dockerfilePath: Dockerfile
     plan: free
     region: oregon
     envVars:
@@ -69,8 +74,10 @@ Wildcard CORS origins (`*`) have been completely eliminated from production conf
 |---|---|---|---|
 | **Local Unit & Integration Tests** | JDK 17 | **PASS** | 29 JUnit 5 tests run, 0 failures, 0 errors |
 | **Strict Production CORS** | Source Code | **PASS** | Restricted to `https://personal-finance-manager-frontends.vercel.app` |
-| **Docker & Blueprint Spec** | Git Repo | **PASS** | Multi-stage Dockerfile and `render.yaml` committed & pushed |
-| **Dedicated Render Web Service** | Render Cloud | **UNVERIFIED** | Service `tessera-backend` not yet created/connected on Render dashboard |
+| **Subfolder Docker Build** | Docker Engine | **PASS** | `docker build -t tessera-backend .` in `tessera-backend` -> BUILD SUCCESS |
+| **Root Docker Build** | Docker Engine | **PASS** | `docker build -t tessera-root .` in root `/` -> BUILD SUCCESS |
+| **Render Blueprint Spec** | Git Repo | **PASS** | Multi-layer Dockerfiles and `render.yaml` committed & pushed (`e479624`) |
+| **Dedicated Render Web Service** | Render Cloud | **UNVERIFIED** | Service `tessera-backend` awaiting trigger on Render dashboard |
 | **Production REST Endpoints** | Live URL | **UNVERIFIED** | Awaiting dedicated Render deployment |
 | **Production WebSocket Handshake** | Live WSS URL | **UNVERIFIED** | Awaiting dedicated Render deployment |
 | **Two-Client Realtime Sync** | Live WSS URL | **UNVERIFIED** | Awaiting dedicated Render deployment |
@@ -82,4 +89,4 @@ Wildcard CORS origins (`*`) have been completely eliminated from production conf
 
 **FINAL STATUS**: **NOT CERTIFIED**
 
-*Reason: The local codebase, Docker container build, unit tests, and production CORS hardening are 100% complete and pushed to GitHub (`b9dff61`). However, a live Render Web Service for Tessera has not yet been provisioned on Render. Per strict certification rules, optimism or reusing an external service (`personal-finance-api.onrender.com`) is explicitly forbidden.*
+*Reason: The local codebase, unit tests, CORS hardening, root & subfolder Docker builds, and `render.yaml` path resolution fixes are 100% complete and pushed to GitHub (`e479624`). However, a live Render Web Service for Tessera has not yet been provisioned/triggered on Render. Per strict certification rules, optimism or reusing an external service (`personal-finance-api.onrender.com`) is explicitly forbidden.*
