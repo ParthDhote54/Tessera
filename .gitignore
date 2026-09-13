@@ -1,0 +1,21 @@
+# Node
+node_modules/
+dist/
+.env.local
+
+# Java
+tessera-backend/target/
+tessera-backend/*.jar
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
