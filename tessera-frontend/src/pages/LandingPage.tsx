@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LivingStage } from '../components/landing/LivingStage';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+const API_URL = (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('YOUR_BACKEND_URL'))
+  ? import.meta.env.VITE_API_URL
+  : 'https://tessera-e1w0.onrender.com';
 
 const BEATS = [
   {

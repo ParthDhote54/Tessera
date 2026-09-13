@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef } from 'react';
 import { ClientMessage, ServerMessage } from '../types/events';
 import { ConnectionStatus } from '../types/room';
 
-const WS_URL = import.meta.env.VITE_WS_URL ?? 'ws://localhost:8080/ws';
+const WS_URL = (import.meta.env.VITE_WS_URL && !import.meta.env.VITE_WS_URL.includes('YOUR_BACKEND_URL'))
+  ? import.meta.env.VITE_WS_URL
+  : 'wss://tessera-e1w0.onrender.com/ws';
 
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000];
 const MAX_ATTEMPTS = 10;
