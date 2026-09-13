@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: tessera-backend
+    env: docker
+    dockerContext: tessera-backend
+    dockerfilePath: tessera-backend/Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: tessera.cors.allowed-origins
+        value: "https://personal-finance-manager-frontends.vercel.app"
+    healthCheckPath: /api/health
