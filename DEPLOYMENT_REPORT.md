@@ -1,18 +1,23 @@
-# Tessera Backend Deployment & Infrastructure Report
+# Tessera Backend Deployment & Infrastructure Report (Certification Correction)
 
-## 1. Executive Summary
-This document provides the complete production configuration, containerization, build validation, and deployment infrastructure for the **Tessera Real-Time Collaborative Backend** (Spring Boot 3.2.3 / Java 17).
+## 1. Executive Correction Summary
+- **REJECTED URL**: `https://personal-finance-api.onrender.com` is an existing Personal Finance Manager backend service and **MUST NOT** be used or certified as Tessera infrastructure.
+- **CERTIFICATION STATUS**: **NOT CERTIFIED** (Pending live Render Web Service provisioning for the Tessera repository under a dedicated Render URL).
 
 ---
 
 ## 2. Infrastructure & Containerization Architecture
 
+### Source & Repository Identity
+- **Local Path**: `P:\Java backend Projects\flam-ai-tessera\tessera-backend`
+- **Git Repository**: `https://github.com/ParthDhote54/Tessera.git` (Branch: `main`, Commit: `b9dff61`)
+
 ### Docker Infrastructure (`tessera-backend/Dockerfile`)
-A production-grade, multi-stage Dockerfile has been configured for deterministic container deployment:
+A production-grade, multi-stage Dockerfile has been written and pushed:
 - **Build Stage**: `maven:3.9.6-eclipse-temurin-17-alpine`
 - **Runtime Stage**: `eclipse-temurin:17-jre-alpine` (Minimal JRE runtime image)
-- **Security**: Non-root system user (`tessera`) created and configured to execute the container artifact.
-- **Port Exposure**: Dynamic `${PORT}` binding (default: `8080`).
+- **Security**: Non-root system user (`tessera`) created and configured to execute container artifact.
+- **Port Exposure**: Dynamic `${PORT}` binding.
 
 ### Render Blueprint Manifest (`render.yaml`)
 ```yaml
@@ -34,60 +39,47 @@ services:
 
 ---
 
-## 3. Production Configuration Audit
+## 3. Strict Production CORS Hardening
+Wildcard CORS origins (`*`) have been completely eliminated from production configuration.
 
-### Dynamic Port Binding
-- **File**: `tessera-backend/src/main/resources/application.properties`
-- **Setting**: `server.port=${PORT:8080}`
-- **Validation**: Binds automatically to Render's dynamically assigned `${PORT}` environment variable while falling back to 8080 locally.
-
-### CORS & Real-Time Origin Permissions
-- **REST CORS**: `RoomController` configured with `@CrossOrigin(origins = "*")`
-- **WebSocket CORS**: `WebSocketConfig` configured with `setAllowedOriginPatterns("*")`
-- **Frontend Origin**: Compatible with `https://personal-finance-manager-frontends.vercel.app/`
+- **REST API CORS**: Configured via `WebMvcCorsConfig.java` to explicitly allow `https://personal-finance-manager-frontends.vercel.app`.
+- **WebSocket CORS**: Configured in `WebSocketConfig.java` to restrict handshake origins to `https://personal-finance-manager-frontends.vercel.app`.
+- **Properties Override**: `tessera.cors.allowed-origins` configured in `application.properties`.
 
 ---
 
-## 4. API & WebSocket Protocol Specifications
+## 4. Required API & WebSocket Protocol Specifications
 
 ### REST Endpoints
-| Endpoint | Method | Response Schema | Purpose |
+| Endpoint | Method | Expected Output | Purpose |
 |---|---|---|---|
-| `/api/health` | GET | `{"status":"ok","rooms":0,"timestamp":1773528969429}` | Render health check probe & readiness signal |
+| `/api/health` | GET | `{"status":"ok","rooms":0,"timestamp":...}` | System health & room count from `RoomManager` |
 | `/api/rooms` | POST | `{"roomId":"<uuid>"}` | Room instantiation |
-| `/api/rooms/{id}` | GET | `{"roomId":"...","participantCount":1,"createdAt":"..."}` | Room state & metadata query |
+| `/api/rooms/{id}` | GET | `{"roomId":"...","participantCount":1,"createdAt":"..."}` | Room state lookup |
 
-### WebSocket Channel
-- **Endpoint**: `/ws` (Secure WebSocket: `wss://<host>/ws`)
-- **Protocol Handlers**: `TesseraWebSocketHandler`
-- **Supported Message Types**:
-  - `JOIN_ROOM`
-  - `CURSOR_MOVE`
-  - `OBJECT_LOCK`
-  - `OBJECT_MOVE`
-  - `OBJECT_RELEASE`
-  - `PING` / `PONG`
-  - `SYNC_REQUEST`
+### WebSocket Endpoint
+- **URL**: `wss://<TESSERA-RENDER-URL>/ws`
+- **Supported Messages**: `JOIN_ROOM`, `CURSOR_MOVE`, `OBJECT_LOCK`, `OBJECT_MOVE`, `OBJECT_RELEASE`, `PING`/`PONG`, `SYNC_REQUEST`.
 
 ---
 
-## 5. Verification & Test Matrix
+## 5. Verification Gate Status
 
-| Test Layer | Target / Environment | Command Executed | Result | Details |
-|---|---|---|---|---|
-| **Maven Unit & Integration Tests** | Local JDK 17 | `mvn test` | **PASS** | 29 JUnit 5 tests run, 0 failures, 0 errors |
-| **Production Artifact Packaging** | Local Maven | `mvn clean package` | **PASS** | Executable JAR `tessera-backend-1.0.0.jar` created (20.8MB) |
-| **Port Binding Configuration** | Local / Docker | `server.port=${PORT:8080}` | **PASS** | Verified dynamic environment variable override |
-| **Render Service Provisioning** | Render Cloud | Blueprint / Dashboard | **PENDING CLI KEY** | `render.yaml` & `Dockerfile` ready for zero-downtime deploy |
-
----
-
-## 6. Known Architectural Limitations
-1. **In-Memory State**: Room instances and participant presence reside in memory (`RoomManager`). State resets on container restart.
-2. **Single Instance**: Scaling across multiple nodes requires a Pub/Sub layer (e.g., Redis).
-3. **Anonymous Sessions**: Identity is session-scoped per WebSocket connection.
+| Certification Gate | Target | Status | Reason / Evidence |
+|---|---|---|---|
+| **Local Unit & Integration Tests** | JDK 17 | **PASS** | 29 JUnit 5 tests run, 0 failures, 0 errors |
+| **Strict Production CORS** | Source Code | **PASS** | Restricted to `https://personal-finance-manager-frontends.vercel.app` |
+| **Docker & Blueprint Spec** | Git Repo | **PASS** | Multi-stage Dockerfile and `render.yaml` committed & pushed |
+| **Dedicated Render Web Service** | Render Cloud | **UNVERIFIED** | Service `tessera-backend` not yet created/connected on Render dashboard |
+| **Production REST Endpoints** | Live URL | **UNVERIFIED** | Awaiting dedicated Render deployment |
+| **Production WebSocket Handshake** | Live WSS URL | **UNVERIFIED** | Awaiting dedicated Render deployment |
+| **Two-Client Realtime Sync** | Live WSS URL | **UNVERIFIED** | Awaiting dedicated Render deployment |
+| **Vercel → Render E2E Sync** | Live App | **UNVERIFIED** | Awaiting dedicated Render deployment |
 
 ---
 
-## 7. Final Deployment Status
-- **Status**: **PASS WITH KNOWN LIMITATIONS** (Local build/tests 100% passing, production Docker & `render.yaml` Blueprint fully generated, awaiting Render API token / GitHub repository push to trigger automated Render deployment).
+## 6. Final Certification Verdict
+
+**FINAL STATUS**: **NOT CERTIFIED**
+
+*Reason: The local codebase, Docker container build, unit tests, and production CORS hardening are 100% complete and pushed to GitHub (`b9dff61`). However, a live Render Web Service for Tessera has not yet been provisioned on Render. Per strict certification rules, optimism or reusing an external service (`personal-finance-api.onrender.com`) is explicitly forbidden.*
