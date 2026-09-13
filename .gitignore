@@ -5,6 +5,8 @@ dist-ssr/
 .vite/
 playwright-report/
 test-results/
+*.png
+.vercel/
 
 # Java / Spring Boot Build Outputs
 tessera-backend/target/

@@ -6,13 +6,15 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
+import java.util.Arrays;
+
 @Configuration
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final TesseraWebSocketHandler handler;
 
-    @Value("${tessera.cors.allowed-origins:*}")
+    @Value("${tessera.cors.allowed-origins:https://personal-finance-manager-frontends.vercel.app,http://localhost:5173,http://localhost:3000}")
     private String allowedOrigins;
 
     public WebSocketConfig(TesseraWebSocketHandler handler) {
@@ -21,7 +23,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        String[] origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toArray(String[]::new);
+
         registry.addHandler(handler, "/ws")
-                .setAllowedOriginPatterns("*");
+                .setAllowedOriginPatterns(origins);
     }
 }
