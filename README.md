@@ -3,220 +3,186 @@
 > **Real-Time Collaborative Visual Canvas**  
 > Compose interactive visual experiences together. In real time.
 
----
-
-## 60-Second Demo
-
-1. Open the application landing page
-2. Click **Create a room** — no signup required
-3. Click **Invite** to copy the room link
-4. Open the link in a **second browser tab**
-5. Watch both cursors appear on the same visual stage
-6. Drag an element in Tab A — see it move in Tab B with ownership indicator
-7. Close a tab — watch presence update and lock expire
+[![Production Deployment](https://img.shields.io/badge/Production-Live-success?style=for-the-badge)](https://personal-finance-manager-frontends.vercel.app/)
+[![Frontend](https://img.shields.io/badge/Frontend-Vercel-black?style=for-the-badge&logo=vercel)](https://personal-finance-manager-frontends.vercel.app/)
+[![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render)](https://tessera-e1w0.onrender.com)
+[![WebSocket](https://img.shields.io/badge/WebSocket-wss%3A%2F%2F-blueviolet?style=for-the-badge)](wss://tessera-e1w0.onrender.com/ws)
 
 ---
 
-## Architecture
+## Live Production Links
+
+- **Production App (Frontend)**: [https://personal-finance-manager-frontends.vercel.app/](https://personal-finance-manager-frontends.vercel.app/)
+- **Production Backend REST API**: [https://tessera-e1w0.onrender.com](https://tessera-e1w0.onrender.com)
+- **Production WebSocket Service**: `wss://tessera-e1w0.onrender.com/ws`
+
+---
+
+## Quick Try (60-Second Demo)
+
+1. Open the [Tessera Production Web App](https://personal-finance-manager-frontends.vercel.app/)
+2. Click **Create a room** — instant workspace creation, no signup required
+3. Click **Invite** in the top dock to copy the room URL
+4. Open the link in a **second browser tab or window**
+5. Move your pointer in Tab A — watch the remote cursor move smoothly in Tab B
+6. Drag an element in Tab A — observe atomic visual locking and real-time movement in Tab B
+7. Close a tab — watch presence update instantly and locks release automatically
+
+---
+
+## Key Features
+
+- **Multi-User Real-time Cursors**: High-frequency, ultra-smooth pointer stream rendered at 60fps via canvas `requestAnimationFrame` lerp interpolation.
+- **Collaborative Canvas Stage**: Drag-and-drop elements with real-time coordinate synchronization across all connected clients.
+- **Atomic Drag Locks**: Server-authoritative lease mechanism preventing concurrent drag conflicts with user-colored lock indicators.
+- **Presence & Telemetry HUD**: Live participant avatars, active user counters, and real-time round-trip latency (RTT) diagnostics.
+- **Normalized Viewport Coordinates**: All position data stored in normalized `[0.0, 1.0]` space, guaranteeing perfect layout parity across desktop, tablet, and mobile screens.
+- **Resilient Reconnection**: Exponential backoff reconnection loop with automatic room state resynchronization (`SYNC_REQUEST`).
+
+---
+
+## Architecture Overview
 
 ```
-tessera-frontend/  (React 18 + TypeScript + Vite)
-    pages/
-        LandingPage.tsx     — product entry, room creation, feature showcases
-        RoomPage.tsx        — full collaborative room shell
-    components/
-        Canvas/CanvasStage  — HTML5 Canvas, rAF rendering loop, high-DPI scaling
-        Presence/           — participant avatars + count
-        HUD/TelemetryHUD    — real-time RTT, message rate, status
-    hooks/
-        useWebSocket.ts     — WS lifecycle, reconnect backoff, PING/PONG
-        useRoomState.ts     — authoritative state reducer
-        useCanvasRenderer.ts — rAF loop, element + cursor drawing
-        useElementInteraction.ts — hit test, drag, throttle
-
-tessera-backend/  (Java 17 + Spring Boot 3.x)
-    websocket/
-        TesseraWebSocketHandler — message routing, disconnect cleanup, exception handling
-        WebSocketConfig         — registers /ws endpoint with CORS
-    room/
-        Room           — in-memory room, seeded scene, atomic locks, max capacity
-        RoomManager    — room lifecycle, scheduled cleanup
-    presence/
-        Participant    — session identity + WS session
-    state/
-        CanvasElement  — normalized position element model
-    sync/
-        SynchronizationService — room broadcast helpers
-    controller/
-        RoomController — POST /api/rooms, GET /api/health
+Tessera/
+├── render.yaml                          # Render Blueprint configuration
+├── docs/
+│   └── DEPLOYMENT.md                    # Detailed production verification report
+├── tessera-backend/                     # Spring Boot 3.2.3 / Java 17 Backend
+│   ├── Dockerfile                       # Production multi-stage Docker build
+│   ├── pom.xml                          # Maven build dependencies
+│   └── src/
+│       ├── main/java/com/tessera/
+│       │   ├── config/                  # WebMvc CORS configuration
+│       │   ├── controller/              # Room & Health REST endpoints
+│       │   ├── presence/                # Session identity & Participant model
+│       │   ├── protocol/                # WSS Inbound/Outbound DTO contracts
+│       │   ├── room/                    # Room memory manager & lease lock logic
+│       │   ├── state/                   # Normalized CanvasElement model
+│       │   ├── sync/                    # WebSocket broadcast service
+│       │   └── websocket/               # Raw WebSocket handler & CORS config
+│       └── test/java/com/tessera/       # Automated JUnit 5 test suite (29 tests)
+└── tessera-frontend/                    # React 18 + TypeScript + Vite Frontend
+    ├── package.json
+    ├── vite.config.ts
+    ├── vercel.json                      # Vercel SPA rewrite rules
+    ├── scripts/                         # Automated QA & E2E verification scripts
+    │   ├── qa-production-verification.js
+    │   └── qa-browser-production-audit.cjs
+    └── src/
+        ├── components/                  # Canvas, Presence, Dock, Telemetry HUD
+        ├── hooks/                       # WebSocket, RoomState, CanvasRenderer hooks
+        └── pages/                       # LandingPage & RoomPage routes
 ```
 
 ---
 
-## Core Technical Decisions
+## Realtime Synchronization Architecture
 
-### Two-Channel State Model
+### 1. Two-Channel State Model
 
-The central engineering idea. Two types of state have fundamentally different handling:
+Tessera separates real-time communications into two channels based on data persistence and frequency:
 
-| | Ephemeral (Cursors) | Authoritative (Elements) |
+| Dimension | Ephemeral Stream (Cursors) | Authoritative State (Elements) |
 |---|---|---|
-| **Frequency** | Up to 60/s | On change only |
-| **Storage** | JS Refs, never React state | React reducer |
-| **Server role** | Pure relay | Validated, stored |
-| **Persistence** | Never | In-memory room state |
-| **Reconciliation** | Restart on reconnect | Full resync from server |
+| **Frequency** | Up to 60 updates/sec | On user interaction only |
+| **Storage** | React Refs (`Map<sessionId, RemoteCursor>`) | React Reducer state |
+| **Server Role** | Lightweight broadcast relay | Validated, atomic lock, stored in Room |
+| **Persistence** | None (purely transient) | In-memory room snapshot |
+| **Reconciliation** | Re-initialized on connection | Restored via `ROOM_STATE` snapshot |
 
-### Canvas for Stage Rendering
+### 2. Zero-Render Canvas Loop (`requestAnimationFrame`)
 
-Remote cursor positions arrive ~60×/second per participant. React state cannot handle this frequency without CPU saturation. The canvas stage uses `requestAnimationFrame` exclusively:
+High-frequency cursor movements received over WebSocket do **not** trigger React component re-renders.
+- Incoming `CURSOR_MOVE` frames update mutable JavaScript references.
+- The `useCanvasRenderer` hook maintains a `requestAnimationFrame` loop that interpolates positions (`lerp`) and draws directly to the HTML5 Canvas 60 times per second.
+- High-DPI displays are handled automatically by scaling canvas buffer dimensions via `window.devicePixelRatio`.
 
-- Remote cursor positions stored in `useRef<Map<sessionId, RemoteCursor>>`
-- `rAF` loop reads refs and lerps toward target positions every 16ms
-- **Zero React re-renders** per cursor event
-- Sharp anti-blur canvas rendering with explicit high-DPI devicePixelRatio handling
+### 3. Atomic Soft Drag Locks
 
-### Soft Drag Lock (Conflict Strategy)
-
-One user holds a server-granted lease on an element at a time:
-
-```
-User pointerdown → send OBJECT_LOCK
-Server: atomically check + grant (synchronized block on Room)
-Server: broadcast OBJECT_LOCK{ownerId} to all
-Owner: begin drag (optimistic local rendering)
-Others: element highlights with owner's color
-Owner pointerup → send OBJECT_RELEASE{finalX, finalY}
-Server: commit position, release lock, broadcast OBJECT_RELEASE
-Disconnect: server expires lease immediately, broadcasts release
-```
-
-Why not CRDT/OT: element placement is low-frequency and discrete. Concurrent drag of the same element is extremely rare. Soft locking prevents destructive concurrent updates without operational transform complexity.
-
-### Reconnection Strategy
-
-```
-Connected → Connection Lost → Reconnecting
-→ Exponential backoff (1s, 2s, 4s, 8s, 16s, 30s max) + ±500ms jitter
-→ New WebSocket → JOIN_ROOM sent
-→ Server responds with full ROOM_STATE
-→ Client reconciles: element positions, participants, locks restored
-→ Connected
-```
-
-### Coordinate Normalization
-
-All element positions are stored as `[0.0, 1.0]` normalized values. Canvas draws by multiplying by pixel dimensions via `ResizeObserver`. The same logical scene renders correctly across all viewport sizes.
-
----
-
-## WebSocket Protocol
-
-### Client → Server
-
-| Message | Purpose |
-|---|---|
-| `JOIN_ROOM` | Associate WS connection with room + identity |
-| `CURSOR_MOVE` | Broadcast cursor position (throttled, ephemeral) |
-| `OBJECT_LOCK` | Request drag lease on element |
-| `OBJECT_MOVE` | Update position while drag lease held |
-| `OBJECT_RELEASE` | Commit final position, release lease |
-| `PING` | RTT measurement (includes timestamp) |
-| `SYNC_REQUEST` | Request full ROOM_STATE resync |
-
-### Server → Client
-
-| Message | Purpose |
-|---|---|
-| `ROOM_STATE` | Full snapshot on join/resync |
-| `USER_JOINED` / `USER_LEFT` | Presence updates |
-| `CURSOR_MOVE` | Relayed cursor with sessionId added |
-| `OBJECT_LOCK` / `OBJECT_MOVE` / `OBJECT_RELEASE` | Element state changes |
-| `PONG` | RTT echo |
-| `ERROR` | Typed error with code + message |
-
----
-
-## Performance
-
-- **Cursor throttle**: outbound at ≥16ms minimum interval using `performance.now()` + ref
-- **Object move throttle**: ≤30fps (~33ms) during drag
-- **Lerp interpolation**: remote cursors at factor 0.14/frame, elements at 0.10/frame
-- **No React state churn**: all high-frequency data in refs, drawn via rAF
-- **Validation**: 4KB payload cap, UUID validation, coordinate clamping, room capacity 12
-
----
-
-## Quality Assurance & Visual Certification
-
-The codebase contains a comprehensive automated QA and visual certification engine:
-
-- **Backend Test Suite**: 29 automated JUnit 5 tests covering room lifecycle, atomic lock competition, rate limiting, payload security, disconnect cleanup, and WebSocket protocol edges.
-- **Frontend & E2E Testing**: Playwright E2E testing suite covering full route lifecycle, multi-client real-time synchronization, and reconnect recovery.
-- **Visual Design Certification**: 10-iteration visual quality optimization pass + sharp anti-blur audit (`9.7/10` certified visual rating).
-- **QA Documentation**: Full audit reports available in [`qa/`](qa/) and [`design-qa/`](design-qa/).
+To prevent race conditions when two participants interact with the same canvas element:
+1. User presses pointer down on an element $\rightarrow$ Sends `OBJECT_LOCK` with `elementId`.
+2. Backend checks lock state atomically in a synchronized `Room` block.
+3. If free, lock lease is granted to the session and `OBJECT_LOCK` is broadcast to all participants.
+4. Remote clients display visual lock indicators matching the owner's assigned color.
+5. On pointer release $\rightarrow$ Client sends `OBJECT_RELEASE` with final normalized coordinates `(x, y)`.
+6. If a participant disconnects unexpectedly, the server immediately releases all locks held by that session.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18, TypeScript, Vite |
-| Rendering | HTML5 Canvas API |
-| Routing | React Router v6 |
-| Testing | Playwright, Vitest |
-| Backend | Java 17, Spring Boot 3.x, JUnit 5 |
-| Real-time | Raw WebSocket (Spring WebSocket, no STOMP) |
-| Serialization | Jackson |
+- **Frontend**: React 18, TypeScript, Vite, HTML5 Canvas API, React Router v6
+- **Backend**: Java 17, Spring Boot 3.2.3, Spring WebSocket (Raw WebSocket, no STOMP overhead), Jackson
+- **Testing**: JUnit 5, Playwright E2E
+- **DevOps**: Docker (Multi-stage build), Render (Backend), Vercel (Frontend)
 
 ---
 
-## Run Locally
+## Running Locally
 
-**Prerequisites:** Java 17+, Maven, Node 18+
+### Prerequisites
+- Java 17+
+- Maven 3.8+
+- Node.js 18+
 
+### 1. Start Backend
 ```bash
-# Backend
 cd tessera-backend
 mvn spring-boot:run
-# Server starts on http://localhost:8080
+```
+*Backend starts on `http://localhost:8080` (WebSocket endpoint at `ws://localhost:8080/ws`).*
 
-# Frontend (new terminal)
+### 2. Start Frontend
+```bash
 cd tessera-frontend
 npm install
 npm run dev
-# Opens on http://localhost:5173
 ```
-
-**Environment:** Copy `.env.example` to `.env.local` in `tessera-frontend/` (already pre-configured for localhost).
+*Frontend opens on `http://localhost:5173`.*
 
 ---
 
-## Deployment
+## Quality Assurance & Automated Testing
 
-**Frontend Deployment (e.g. Vercel):**
+### Backend Unit & Integration Tests (JUnit 5)
+Run the full backend test suite (29 tests passing):
 ```bash
-cd tessera-frontend
-# Set environment variables:
-# VITE_WS_URL=wss://YOUR_BACKEND_URL/ws
-# VITE_API_URL=https://YOUR_BACKEND_URL
+cd tessera-backend
+mvn test
 ```
 
-**Backend Deployment (e.g. Render / Docker / Cloud Run):**
-- Build command: `mvn package -DskipTests`
-- Start command: `java -jar target/tessera-backend-1.0.0.jar`
-- WebSocket support: Requires persistent WebSocket connections.
+### Production End-to-End & Protocol Verification
+Run automated production tests directly against live cloud infrastructure:
+```bash
+# Verify live REST API & dual-client real-time WebSocket protocol
+node tessera-frontend/scripts/qa-production-verification.js
+
+# Verify live Vercel frontend navigation & WebSocket connection in headless browser
+node tessera-frontend/scripts/qa-browser-production-audit.cjs
+```
 
 ---
 
-## Known Limitations
+## Deployment Configuration
 
-- **In-memory state**: room state is maintained in-memory on the active backend node
-- **Single instance**: horizontal scaling requires external Pub/Sub (e.g., Redis)
-- **Anonymous session identity**: user IDs generated on WS connection
-- **Room capacity**: default limit of 12 active participants per room
+- **Frontend (Vercel)**: Configured with `tessera-frontend/vercel.json` for SPA routes. Environment variables:
+  - `VITE_WS_URL=wss://tessera-e1w0.onrender.com/ws`
+  - `VITE_API_URL=https://tessera-e1w0.onrender.com`
+- **Backend (Render)**: Configured with root `render.yaml` and `tessera-backend/Dockerfile`. Environment variables:
+  - `PORT=10000`
+  - `tessera.cors.allowed-origins=https://personal-finance-manager-frontends.vercel.app`
+
+For the complete production audit report, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ---
 
-*Built by Parth — Flam AI Real-Time Multiplayer Cursor & State Sync Assignment*
+## Known Architectural Limitations
+
+1. **In-Memory State**: Active room state is maintained in JVM memory (`RoomManager`). State resets if the Render backend container restarts.
+2. **Single-Instance Scope**: Multi-node horizontal scaling requires a Redis Pub/Sub adapter to relay messages across instances.
+3. **Anonymous Session Identity**: Participants receive ephemeral session IDs upon connecting over WebSocket.
+
+---
+
+*Tessera — Real-Time Multiplayer Cursor & State Sync*
