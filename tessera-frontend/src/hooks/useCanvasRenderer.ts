@@ -140,13 +140,13 @@ export function useCanvasRenderer(opts: RendererOptions) {
 // ── Drawing functions ─────────────────────────────────────────────────────────
 
 function drawStageBackground(ctx: CanvasRenderingContext2D, W: number, H: number) {
-  // Plain dark canvas background (#08090B)
-  ctx.fillStyle = '#08090B';
+  // Pure dark canvas background (#000000)
+  ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, W, H);
 
   // Quiet dot grid with 32px spacing
   const SPACING = 32;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
   for (let x = SPACING; x < W; x += SPACING) {
     for (let y = SPACING; y < H; y += SPACING) {
       ctx.beginPath();
@@ -157,12 +157,12 @@ function drawStageBackground(ctx: CanvasRenderingContext2D, W: number, H: number
 }
 
 const ELEMENT_META: Record<string, { color: string; label: string; bg: string }> = {
-  PRODUCT: { color: '#6366F1', label: 'Product', bg: '#17181C' },
-  HOTSPOT: { color: '#0EA5E9', label: 'Hotspot', bg: '#17181C' },
-  CTA:     { color: '#10B981', label: 'CTA', bg: '#17181C' },
-  OFFER:   { color: '#F59E0B', label: 'Offer', bg: '#17181C' },
-  POLL:    { color: '#8B5CF6', label: 'Poll', bg: '#17181C' },
-  TRIGGER: { color: '#F43F5E', label: 'Trigger', bg: '#17181C' },
+  PRODUCT: { color: '#00D9FF', label: 'Product', bg: '#121316' },
+  HOTSPOT: { color: '#0EA5E9', label: 'Hotspot', bg: '#121316' },
+  CTA:     { color: '#10B981', label: 'CTA', bg: '#121316' },
+  OFFER:   { color: '#F59E0B', label: 'Offer', bg: '#121316' },
+  POLL:    { color: '#D946EF', label: 'Poll', bg: '#121316' },
+  TRIGGER: { color: '#F43F5E', label: 'Trigger', bg: '#121316' },
 };
 
 function drawElement(

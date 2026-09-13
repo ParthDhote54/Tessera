@@ -26,27 +26,19 @@ export default function LandingPage() {
     resize();
     window.addEventListener('resize', resize);
 
-    // Sample elements for ambient demo canvas
-    const elements = [
-      { id: '1', type: 'Product', label: 'Interactive Canvas', color: '#6366F1', xRatio: 0.65, yRatio: 0.22, w: 160, h: 72 },
-      { id: '2', type: 'Hotspot', label: 'AR Anchor', color: '#0EA5E9', xRatio: 0.82, yRatio: 0.45, w: 140, h: 64 },
-      { id: '3', type: 'CTA', label: 'Shop Experience', color: '#10B981', xRatio: 0.58, yRatio: 0.62, w: 150, h: 68 },
-      { id: '4', type: 'Offer', label: 'Flash Sale 20%', color: '#F59E0B', xRatio: 0.76, yRatio: 0.75, w: 145, h: 64 },
-    ];
-
     const frame = (t: number) => {
       const W = canvas.width;
       const H = canvas.height;
 
       ctx.clearRect(0, 0, W, H);
 
-      // 1. Solid dark background (#08090B)
-      ctx.fillStyle = '#08090B';
+      // 1. Pure dark background (#000000)
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, W, H);
 
       // 2. Quiet dot grid (32px pitch)
       const spacing = 32;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
       for (let x = spacing; x < W; x += spacing) {
         for (let y = spacing; y < H; y += spacing) {
           ctx.beginPath();
@@ -55,15 +47,15 @@ export default function LandingPage() {
         }
       }
 
-      // 3. Two ghost cursors drifting slowly across the plain dark background
+      // 3. Two ghost cursors drifting slowly across the background
       const cursorA_X = (0.68 + Math.sin(t * 0.0005) * 0.12) * W;
       const cursorA_Y = (0.35 + Math.cos(t * 0.0007) * 0.10) * H;
 
       const cursorB_X = (0.78 + Math.cos(t * 0.0004) * 0.10) * W;
       const cursorB_Y = (0.62 + Math.sin(t * 0.0006) * 0.12) * H;
 
-      drawDemoCursor(ctx, cursorA_X, cursorA_Y, 'Indigo Fox', '#6366F1');
-      drawDemoCursor(ctx, cursorB_X, cursorB_Y, 'Teal Crane', '#10B981');
+      drawDemoCursor(ctx, cursorA_X, cursorA_Y, 'Indigo Fox', '#00D9FF');
+      drawDemoCursor(ctx, cursorB_X, cursorB_Y, 'Teal Crane', '#D946EF');
 
       animId = requestAnimationFrame(frame);
     };
@@ -92,7 +84,7 @@ export default function LandingPage() {
 
   return (
     <div className="landing">
-      {/* Ambient Live Canvas Hero Background */}
+      {/* Ambient Live Canvas Background */}
       <div className="landing-canvas-wrapper" aria-hidden="true">
         <canvas ref={canvasRef} className="landing-canvas" />
       </div>
@@ -103,63 +95,129 @@ export default function LandingPage() {
           <span className="logo-mark">⬡</span>
           <span className="logo-name">Tessera</span>
         </div>
-        <a
-          href="https://github.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="landing-gh-link"
-          aria-label="GitHub"
-        >
-          <GitHubIcon />
-        </a>
+        <div className="landing-nav-links">
+          <a
+            href="https://github.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="landing-gh-link"
+            aria-label="GitHub Repository"
+          >
+            <GitHubIcon />
+            <span>GitHub</span>
+          </a>
+        </div>
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <main className="landing-main">
-        <div className="landing-hero-content">
-          <h1 className="landing-headline">
-            Compose together.<br />
-            <span className="mosaic-accent">In real time.</span>
-          </h1>
+        <section className="landing-hero-section">
+          <div className="landing-hero-content">
+            <div className="landing-tagline-badge">
+              <span>⚡</span>
+              <span>Real-Time Multiplayer State Engine</span>
+            </div>
 
-          <p className="landing-sub">
-            A shared interactive workspace for building visual experiences — live,
-            with everyone's cursor visible and every change instantly synchronized.
-          </p>
+            <h1 className="landing-headline">
+              Compose together.<br />
+              <span className="mosaic-accent">In real time.</span>
+            </h1>
 
-          <div className="landing-actions">
-            <button
-              id="create-room-btn"
-              className="btn-primary btn-hero-glow"
-              onClick={createRoom}
-              disabled={loading}
-              aria-busy={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="spinner" aria-hidden="true" />
-                  Creating room…
-                </>
-              ) : (
-                <>
-                  <span aria-hidden="true">⬡</span>
-                  Create a room
-                </>
-              )}
-            </button>
-            <p className="landing-hint">No sign-up · Instant start · Share a link</p>
+            <p className="landing-sub">
+              A shared interactive workspace for building visual experiences — live,
+              with everyone's cursor visible and every change instantly synchronized.
+            </p>
+
+            <div className="landing-actions">
+              <button
+                id="create-room-btn"
+                className="btn-primary-cyan"
+                onClick={createRoom}
+                disabled={loading}
+                aria-busy={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" />
+                    Creating room…
+                  </>
+                ) : (
+                  <>
+                    <span aria-hidden="true">⬡</span>
+                    Create a room
+                  </>
+                )}
+              </button>
+
+              <a
+                href="https://github.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary-dark"
+              >
+                <GitHubIcon />
+                <span>View Source</span>
+              </a>
+            </div>
+
+            <p className="landing-hint">No sign-up required · Instant session · Share via link</p>
+
+            {error && (
+              <div className="landing-error" role="alert">
+                {error}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Feature Cards Section ────────────────────────────────────────── */}
+        <section className="landing-features-section">
+          <div className="section-header">
+            <h2 className="section-title">Built for High-Scale Interaction</h2>
+            <p className="section-sub">
+              Designed from the ground up for low latency, smooth frame rates, and reliable state reconciliation.
+            </p>
           </div>
 
-          {error && (
-            <div className="landing-error" role="alert">
-              {error}
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon-badge">⚡</div>
+              <h3 className="feature-card-title">Sub-Millisecond Sync</h3>
+              <p className="feature-card-desc">
+                High-frequency WebSocket message pipeline with rAF interpolation for smooth 60 FPS cursor motion.
+              </p>
             </div>
-          )}
-        </div>
+
+            <div className="feature-card">
+              <div className="feature-icon-badge">🔒</div>
+              <h3 className="feature-card-title">Authoritative Soft-Locks</h3>
+              <p className="feature-card-desc">
+                Optimistic lock acquisition prevents concurrent editing conflicts while dragging elements.
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <div className="feature-icon-badge">📡</div>
+              <h3 className="feature-card-title">Live Telemetry & RTT</h3>
+              <p className="feature-card-desc">
+                Continuous round-trip ping monitoring and message throughput metrics rendered in real time.
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <div className="feature-icon-badge">🔌</div>
+              <h3 className="feature-card-title">Seamless Reconnect</h3>
+              <p className="feature-card-desc">
+                Automatic backoff reconnection handler that rebuilds state snapshot transparently upon drop.
+              </p>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="landing-footer">
-        <span>Built by Parth · Flam AI Assignment</span>
+        <span>Tessera — Real-Time Collaborative Canvas</span>
+        <span>Flam AI Frontend Assignment</span>
       </footer>
     </div>
   );
@@ -188,7 +246,7 @@ function drawDemoCursor(
   ctx.fill();
   ctx.stroke();
 
-  ctx.font = `500 11px 'Plus Jakarta Sans', sans-serif`;
+  ctx.font = `600 11px 'Plus Jakarta Sans', sans-serif`;
   const tw = ctx.measureText(name).width;
   const labelX = x + 12;
   const labelY = y + 20;
@@ -198,7 +256,7 @@ function drawDemoCursor(
   roundRect(ctx, labelX - pad, labelY - 13, tw + pad * 2, 18, 999);
   ctx.fill();
 
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#000000';
   ctx.textAlign = 'left';
   ctx.fillText(name, labelX, labelY - 1);
   ctx.restore();
@@ -229,4 +287,5 @@ function GitHubIcon() {
     </svg>
   );
 }
+
 
