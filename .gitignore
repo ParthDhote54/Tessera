@@ -1,21 +1,28 @@
-# Node
+# Node / Frontend Build Outputs
 node_modules/
 dist/
-.env.local
+dist-ssr/
+.vite/
+playwright-report/
+test-results/
 
-# Java
+# Java / Spring Boot Build Outputs
 tessera-backend/target/
 tessera-backend/*.jar
 *.class
+.mvn/.target/
 
-# IDE
+# Local Environment & Secrets
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE & OS Artifacts
 .idea/
 .vscode/
 *.iml
-
-# OS
 .DS_Store
 Thumbs.db
-
-# Logs
 *.log
+logs/

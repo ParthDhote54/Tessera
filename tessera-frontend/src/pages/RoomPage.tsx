@@ -175,10 +175,22 @@ export default function RoomPage() {
   if (roomError) {
     return (
       <div className="room-error-screen">
-        <span className="error-icon">⚠</span>
-        <h2>{roomError}</h2>
-        <p>The room may have expired or the link is invalid.</p>
-        <button className="btn-primary" onClick={() => navigate('/')}>Create new room</button>
+        <div className="room-error-card">
+          <div className="room-error-badge" aria-hidden="true">
+            <svg className="tessera-mark" width="22" height="22" viewBox="0 0 22 22">
+              <path fill="currentColor" d="M11 1.4 19.4 6v10L11 20.6 2.6 16V6L11 1.4Zm0 2.3L4.8 7.1v7.8L11 18.3l6.2-3.4V7.1L11 3.7Zm0 3.2 3.8 2.1v4.2L11 15.3l-3.8-2.1V9l3.8-2.1Z" />
+            </svg>
+          </div>
+          <h1 className="room-error-title">{roomError}</h1>
+          <p className="room-error-desc">
+            This session link is invalid or the room has expired. Open a new room to start composing.
+          </p>
+          <div className="room-error-actions">
+            <button className="btn-hero invert" onClick={() => navigate('/')}>
+              Open a new room
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -191,7 +203,9 @@ export default function RoomPage() {
       <header className="room-header">
         <div className="room-header-left">
           <button className="logo-link" onClick={() => navigate('/')} aria-label="Tessera home">
-            <span className="logo-mark-sm">⬡</span>
+            <svg className="tessera-mark" width="18" height="18" viewBox="0 0 22 22" aria-hidden="true">
+              <path fill="currentColor" d="M11 1.4 19.4 6v10L11 20.6 2.6 16V6L11 1.4Zm0 2.3L4.8 7.1v7.8L11 18.3l6.2-3.4V7.1L11 3.7Zm0 3.2 3.8 2.1v4.2L11 15.3l-3.8-2.1V9l3.8-2.1Z" />
+            </svg>
             <span className="logo-name-sm">Tessera</span>
           </button>
           <div className="room-id-chip" title={roomId}>
@@ -201,17 +215,21 @@ export default function RoomPage() {
         </div>
 
         <div className="room-header-right">
+          {roomState.participants.size <= 1 && connectionStatus === 'connected' && (
+            <div className="invite-hint-pill">
+              <span>Alone in room</span>
+              <button className="btn-hint-invite" onClick={copyInvite}>
+                Copy link
+              </button>
+            </div>
+          )}
           <button
             id="invite-btn"
             className={`btn-invite ${copied ? 'copied' : ''}`}
             onClick={copyInvite}
             aria-label="Copy invite link"
           >
-            {copied ? (
-              <><span aria-hidden="true">✓</span> Copied!</>
-            ) : (
-              <><span aria-hidden="true">⬡</span> Invite</>
-            )}
+            {copied ? 'Copied' : 'Invite'}
           </button>
         </div>
       </header>
@@ -253,17 +271,6 @@ export default function RoomPage() {
             );
           }}
         />
-
-        {/* Invite hint overlay (shown when alone) */}
-        {roomState.participants.size <= 1 && connectionStatus === 'connected' && (
-          <div className="invite-hint">
-            <span>👥</span>
-            <span>Invite someone to collaborate</span>
-            <button className="btn-hint-invite" onClick={copyInvite}>
-              Copy link
-            </button>
-          </div>
-        )}
       </main>
 
       {/* ── Unified Collaboration & Telemetry Floating Dock ────────────── */}

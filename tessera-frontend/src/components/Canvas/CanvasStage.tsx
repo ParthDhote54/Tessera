@@ -53,26 +53,34 @@ export function CanvasStage({
     if (dragState) onDragStateChange(dragState);
   }, [dragState, onDragStateChange]);
 
-  // ResizeObserver
+  // ResizeObserver with High-DPI (devicePixelRatio) backing resolution
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    const updateSize = (rectWidth: number, rectHeight: number) => {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.round(rectWidth * dpr);
+      canvas.height = Math.round(rectHeight * dpr);
+      canvas.style.width = `${rectWidth}px`;
+      canvas.style.height = `${rectHeight}px`;
+
+      stageWidthRef.current = rectWidth;
+      stageHeightRef.current = rectHeight;
+    };
+
     const ro = new ResizeObserver(entries => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
-        canvas.width = width;
-        canvas.height = height;
-        stageWidthRef.current = width;
-        stageHeightRef.current = height;
+        updateSize(width, height);
       }
     });
     ro.observe(canvas);
+
     // Initial size
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    stageWidthRef.current = rect.width;
-    stageHeightRef.current = rect.height;
+    updateSize(rect.width, rect.height);
+
     return () => ro.disconnect();
   }, []);
 

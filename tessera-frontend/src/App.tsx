@@ -16,14 +16,21 @@ export default function App() {
 
 function NotFound() {
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', height: '100vh', gap: '16px',
-      color: '#94A3B8', fontFamily: 'Inter, system-ui, sans-serif'
-    }}>
-      <span style={{ fontSize: 48 }}>⬡</span>
-      <h2 style={{ color: '#F1F5F9', margin: 0 }}>Page not found</h2>
-      <a href="/" style={{ color: '#6366F1' }}>Back to Tessera</a>
+    <div className="not-found-screen">
+      <div className="not-found-card">
+        <div className="not-found-icon-badge" aria-hidden="true">
+          <svg className="tessera-mark" width="22" height="22" viewBox="0 0 22 22">
+            <path fill="currentColor" d="M11 1.4 19.4 6v10L11 20.6 2.6 16V6L11 1.4Zm0 2.3L4.8 7.1v7.8L11 18.3l6.2-3.4V7.1L11 3.7Zm0 3.2 3.8 2.1v4.2L11 15.3l-3.8-2.1V9l3.8-2.1Z" />
+          </svg>
+        </div>
+        <h1 className="not-found-title">This path is empty.</h1>
+        <p className="not-found-desc">
+          The address does not match a Tessera page. Return to the stage, or open a room from there.
+        </p>
+        <a href="/" className="btn-hero invert">
+          Back to Tessera
+        </a>
+      </div>
     </div>
   );
 }

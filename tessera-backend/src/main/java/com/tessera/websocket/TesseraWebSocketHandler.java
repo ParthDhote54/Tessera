@@ -64,7 +64,7 @@ public class TesseraWebSocketHandler extends TextWebSocketHandler {
     // ── Message routing ───────────────────────────────────────────────────────
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+    public void handleTextMessage(WebSocketSession session, TextMessage message) {
         if (message.getPayloadLength() > MAX_PAYLOAD_BYTES) {
             sync.sendTo(session, OutboundMessage.error("PAYLOAD_TOO_LARGE", "Message exceeds 4KB limit"));
             return;

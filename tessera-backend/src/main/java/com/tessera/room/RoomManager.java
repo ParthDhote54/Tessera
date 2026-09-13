@@ -30,6 +30,9 @@ public class RoomManager {
     }
 
     public Optional<Room> getRoom(String roomId) {
+        if (roomId != null && !rooms.containsKey(roomId)) {
+            rooms.putIfAbsent(roomId, new Room(roomId));
+        }
         return Optional.ofNullable(rooms.get(roomId));
     }
 

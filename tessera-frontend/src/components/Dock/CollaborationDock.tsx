@@ -52,10 +52,14 @@ export function CollaborationDock({
       {/* ── Expanded Detail Panel ────────────────────────────────────────── */}
       {expanded && (
         <div className="dock-expanded-panel">
+          <div className="dock-panel-header">
+            <span className="dock-panel-brand">Live session</span>
+          </div>
+
           <div className="dock-panel-section">
             <span className="dock-panel-title">Session Metrics</span>
             <div className="dock-metric-row">
-              <span className="dock-metric-label">Status</span>
+              <span className="dock-metric-label">Connection</span>
               <span className="dock-metric-value" style={{ color: statusColor }}>
                 <span className="dock-dot-inline" style={{ background: statusColor }} />
                 {statusLabel}
@@ -65,20 +69,22 @@ export function CollaborationDock({
               <div className="dock-metric-row">
                 <span className="dock-metric-label">Latency (RTT)</span>
                 <span className="dock-metric-value mono">
-                  {rtt} ms
+                  {rtt} <span className="unit">ms</span>
                 </span>
               </div>
             )}
             <div className="dock-metric-row">
-              <span className="dock-metric-label">Message Rate</span>
+              <span className="dock-metric-label">Throughput</span>
               <span className="dock-metric-value mono">
-                {msgPerSec} msg/s
+                {msgPerSec} <span className="unit">msg/s</span>
               </span>
             </div>
           </div>
 
+          <div className="dock-panel-divider" />
+
           <div className="dock-panel-section">
-            <span className="dock-panel-title">Active Collaborators ({participantList.length})</span>
+            <span className="dock-panel-title">Active Roster ({participantList.length})</span>
             <div className="dock-participant-list">
               {participantList.map(p => {
                 const isYou = p.sessionId === ownSessionId;

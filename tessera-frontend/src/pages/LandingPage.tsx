@@ -1,72 +1,41 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LivingStage } from '../components/landing/LivingStage';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
+const BEATS = [
+  {
+    id: 'cursors',
+    title: 'Shared cursors',
+    body: 'See who is looking, reaching, and placing. Presence is drawn on the stage, not hidden in a list.',
+    visual: 'cursors',
+  },
+  {
+    id: 'locks',
+    title: 'Soft locks',
+    body: 'When someone takes an object, the rest of the room can see it. Collision becomes choreography.',
+    visual: 'locks',
+  },
+  {
+    id: 'sync',
+    title: 'One shared field',
+    body: 'Moves travel as they happen. The canvas is not a copy you refresh — it is the same space.',
+    visual: 'sync',
+  },
+  {
+    id: 'invite',
+    title: 'A link is enough',
+    body: 'Open a room, send the URL, and the other person lands on the same composition. No account wall.',
+    visual: 'invite',
+  },
+];
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // Full-bleed ambient hero canvas loop
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animId: number;
-
-    const resize = () => {
-      canvas.width = canvas.parentElement?.clientWidth || window.innerWidth;
-      canvas.height = canvas.parentElement?.clientHeight || window.innerHeight;
-    };
-    resize();
-    window.addEventListener('resize', resize);
-
-    const frame = (t: number) => {
-      const W = canvas.width;
-      const H = canvas.height;
-
-      ctx.clearRect(0, 0, W, H);
-
-      // 1. Pure dark background (#000000)
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, W, H);
-
-      // 2. Quiet dot grid (32px pitch)
-      const spacing = 32;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-      for (let x = spacing; x < W; x += spacing) {
-        for (let y = spacing; y < H; y += spacing) {
-          ctx.beginPath();
-          ctx.arc(x, y, 1, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // 3. Two ghost cursors drifting slowly across the background
-      const cursorA_X = (0.68 + Math.sin(t * 0.0005) * 0.12) * W;
-      const cursorA_Y = (0.35 + Math.cos(t * 0.0007) * 0.10) * H;
-
-      const cursorB_X = (0.78 + Math.cos(t * 0.0004) * 0.10) * W;
-      const cursorB_Y = (0.62 + Math.sin(t * 0.0006) * 0.12) * H;
-
-      drawDemoCursor(ctx, cursorA_X, cursorA_Y, 'Indigo Fox', '#00D9FF');
-      drawDemoCursor(ctx, cursorB_X, cursorB_Y, 'Teal Crane', '#D946EF');
-
-      animId = requestAnimationFrame(frame);
-    };
-
-    animId = requestAnimationFrame(frame);
-
-    return () => {
-      window.removeEventListener('resize', resize);
-      cancelAnimationFrame(animId);
-    };
-  }, []);
+  const [beat, setBeat] = useState(BEATS[0].id);
 
   const createRoom = async () => {
     setLoading(true);
@@ -82,210 +51,307 @@ export default function LandingPage() {
     }
   };
 
+  const active = BEATS.find((b) => b.id === beat) ?? BEATS[0];
+
   return (
     <div className="landing">
-      {/* Ambient Live Canvas Background */}
-      <div className="landing-canvas-wrapper" aria-hidden="true">
-        <canvas ref={canvasRef} className="landing-canvas" />
-      </div>
-
-      {/* ── Header ───────────────────────────────────────────────────────── */}
-      <header className="landing-header">
-        <div className="landing-logo">
-          <span className="logo-mark">⬡</span>
-          <span className="logo-name">Tessera</span>
-        </div>
-        <div className="landing-nav-links">
-          <a
-            href="https://github.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="landing-gh-link"
-            aria-label="GitHub Repository"
-          >
-            <GitHubIcon />
-            <span>GitHub</span>
+      <header className="site-nav">
+        <a className="nav-cluster nav-brand" href="/" aria-label="Tessera home">
+          <TesseraMark />
+          <span>Tessera</span>
+        </a>
+        <nav className="nav-cluster nav-mid" aria-label="Page">
+          <a href="#stage">The stage</a>
+          <a href="#presence">Presence</a>
+          <a href="#close">Open a room</a>
+        </nav>
+        <div className="nav-cluster nav-end">
+          <a className="btn-ghost" href="#presence">
+            How it feels
           </a>
+          <button
+            id="nav-create-room"
+            className="btn-solid"
+            type="button"
+            onClick={createRoom}
+            disabled={loading}
+          >
+            Open a room
+          </button>
         </div>
       </header>
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <main className="landing-main">
-        <section className="landing-hero-section">
-          <div className="landing-hero-content">
-            <div className="landing-tagline-badge">
-              <span>⚡</span>
-              <span>Real-Time Multiplayer State Engine</span>
-            </div>
-
-            <h1 className="landing-headline">
-              Compose together.<br />
-              <span className="mosaic-accent">In real time.</span>
-            </h1>
-
-            <p className="landing-sub">
-              A shared interactive workspace for building visual experiences — live,
-              with everyone's cursor visible and every change instantly synchronized.
+      <section className="hero" aria-label="Introduction">
+        <div className="hero-copy">
+          <div className="hero-badge" aria-hidden="true">
+            <span className="badge-dot" />
+            <span>Spatial Collaboration Field</span>
+          </div>
+          <h1>
+            Compose together.
+            <span>In real time.</span>
+          </h1>
+          <p>
+            Tessera is a shared canvas for spatial composition — objects, cursors, and state
+            moving in the same field as you work.
+          </p>
+          <div className="hero-cta-group">
+            <button
+              id="create-room-btn"
+              className="btn-hero"
+              type="button"
+              onClick={createRoom}
+              disabled={loading}
+              aria-busy={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="spinner light" aria-hidden="true" />
+                  Opening room…
+                </>
+              ) : (
+                'Open a room'
+              )}
+            </button>
+            <a href="#stage" className="btn-hero-secondary">
+              Explore the stage ↓
+            </a>
+          </div>
+          {error && (
+            <p className="hero-error" role="alert">
+              {error}
             </p>
+          )}
+        </div>
+        <div className="hero-stage-card">
+          <div className="product-chrome">
+            <span className="product-dot" />
+            <span className="product-name">Tessera Stage · Live Composition Field</span>
+            <span className="product-invite">Live Sync</span>
+          </div>
+          <div className="hero-visual">
+            <LivingStage />
+          </div>
+        </div>
+      </section>
 
-            <div className="landing-actions">
+      <section className="band" id="stage">
+        <div className="band-grid">
+          <div className="band-copy">
+            <p className="eyebrow">The stage</p>
+            <h2>Everyone shares one spatial field.</h2>
+            <p className="lede">
+              Tessera is not a document you pass around. It is a live composition surface:
+              tiles you can move, locks you can see, and collaborators drawn as they arrive.
+            </p>
+            <ul className="stage-feature-list">
+              <li>
+                <span className="feature-icon">✦</span>
+                <div>
+                  <strong>Zero-latency interpolation</strong>
+                  <p>Cursor motions smooth out locally so presence feels immediate.</p>
+                </div>
+              </li>
+              <li>
+                <span className="feature-icon">✦</span>
+                <div>
+                  <strong>Visual soft-locking</strong>
+                  <p>Selecting an object reserves it for your edits in real time.</p>
+                </div>
+              </li>
+              <li>
+                <span className="feature-icon">✦</span>
+                <div>
+                  <strong>Instant room links</strong>
+                  <p>No account wall. Send a URL to drop anyone straight into the field.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div className="product-frame" aria-hidden="true">
+            <div className="product-chrome">
+              <span className="product-dot" />
+              <span className="product-name">Live Spatial Workspace · Demo</span>
+              <span className="product-invite">Active Session</span>
+            </div>
+            <div className="product-field">
+              <article className="tile tile-lg" style={{ ['--tile' as string]: '#E8A87C' }}>
+                <span className="tile-kind">Product</span>
+                <strong>Hero Product</strong>
+              </article>
+              <article className="tile tile-sm" style={{ ['--tile' as string]: '#9BB8C9' }}>
+                <span className="tile-kind">Hotspot</span>
+                <strong>AR Anchor</strong>
+              </article>
+              <article className="tile tile-md" style={{ ['--tile' as string]: '#8FBFB0' }}>
+                <span className="tile-kind">CTA</span>
+                <strong>Shop Now</strong>
+              </article>
+              <article className="tile tile-md alt" style={{ ['--tile' as string]: '#D4A017' }}>
+                <span className="tile-kind">Offer</span>
+                <strong>20% Off Today</strong>
+              </article>
+              <article className="tile tile-wide" style={{ ['--tile' as string]: '#C9A0C4' }}>
+                <span className="tile-kind">Poll</span>
+                <strong>Quick Poll</strong>
+              </article>
+              <span className="ghost-cursor c-a">Mira</span>
+              <span className="ghost-cursor c-b">Jules</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="presence" id="presence">
+        <div className="presence-head">
+          <p className="eyebrow">How it feels</p>
+          <h2>Collaboration is visible, not implied.</h2>
+        </div>
+        <div className="presence-split">
+          <div className="beat-rail" role="tablist" aria-label="Collaboration qualities">
+            {BEATS.map((item) => (
               <button
-                id="create-room-btn"
-                className="btn-primary-cyan"
-                onClick={createRoom}
-                disabled={loading}
-                aria-busy={loading}
+                key={item.id}
+                role="tab"
+                aria-selected={beat === item.id}
+                className={`beat ${beat === item.id ? 'is-active' : ''}`}
+                onClick={() => setBeat(item.id)}
+                type="button"
               >
-                {loading ? (
-                  <>
-                    <span className="spinner" aria-hidden="true" />
-                    Creating room…
-                  </>
-                ) : (
-                  <>
-                    <span aria-hidden="true">⬡</span>
-                    Create a room
-                  </>
-                )}
+                {item.title}
               </button>
-
-              <a
-                href="https://github.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary-dark"
-              >
-                <GitHubIcon />
-                <span>View Source</span>
-              </a>
-            </div>
-
-            <p className="landing-hint">No sign-up required · Instant session · Share via link</p>
-
-            {error && (
-              <div className="landing-error" role="alert">
-                {error}
-              </div>
-            )}
+            ))}
           </div>
-        </section>
-
-        {/* ── Feature Cards Section ────────────────────────────────────────── */}
-        <section className="landing-features-section">
-          <div className="section-header">
-            <h2 className="section-title">Built for High-Scale Interaction</h2>
-            <p className="section-sub">
-              Designed from the ground up for low latency, smooth frame rates, and reliable state reconciliation.
-            </p>
-          </div>
-
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon-badge">⚡</div>
-              <h3 className="feature-card-title">Sub-Millisecond Sync</h3>
-              <p className="feature-card-desc">
-                High-frequency WebSocket message pipeline with rAF interpolation for smooth 60 FPS cursor motion.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon-badge">🔒</div>
-              <h3 className="feature-card-title">Authoritative Soft-Locks</h3>
-              <p className="feature-card-desc">
-                Optimistic lock acquisition prevents concurrent editing conflicts while dragging elements.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon-badge">📡</div>
-              <h3 className="feature-card-title">Live Telemetry & RTT</h3>
-              <p className="feature-card-desc">
-                Continuous round-trip ping monitoring and message throughput metrics rendered in real time.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon-badge">🔌</div>
-              <h3 className="feature-card-title">Seamless Reconnect</h3>
-              <p className="feature-card-desc">
-                Automatic backoff reconnection handler that rebuilds state snapshot transparently upon drop.
-              </p>
+          <div className="beat-stage" role="tabpanel">
+            <BeatVisual kind={active.visual} />
+            <div className="beat-copy">
+              <h3>{active.title}</h3>
+              <p>{active.body}</p>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
 
-      <footer className="landing-footer">
-        <span>Tessera — Real-Time Collaborative Canvas</span>
-        <span>Flam AI Frontend Assignment</span>
+      <section className="principles">
+        <p className="eyebrow">What stays true</p>
+        <h2>A room is a composition, not a chat.</h2>
+        <div className="principle-row">
+          <figure className="principle">
+            <div className="principle-art art-align" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+            <figcaption>
+              <h3>Spatial thinking</h3>
+              <p>Place, scale, and relation matter. The work lives in coordinates, not threads.</p>
+            </figcaption>
+          </figure>
+          <figure className="principle">
+            <div className="principle-art art-sync" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </div>
+            <figcaption>
+              <h3>Low-latency presence</h3>
+              <p>Cursor motion interpolates locally. The room stays fluid even as the network breathes.</p>
+            </figcaption>
+          </figure>
+          <figure className="principle">
+            <div className="principle-art art-link" aria-hidden="true" />
+            <figcaption>
+              <h3>Share the URL</h3>
+              <p>The session is the product. Anyone with the link enters the same field.</p>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section className="close" id="close">
+        <div className="close-card">
+          <p className="eyebrow">Begin Now</p>
+          <h2>Open a room and leave a link.</h2>
+          <p className="lede">
+            No sign-up. The canvas is ready the moment your session starts.
+          </p>
+          <button className="btn-hero invert" type="button" onClick={createRoom} disabled={loading}>
+            {loading ? 'Opening room…' : 'Open a room'}
+          </button>
+        </div>
+      </section>
+
+      <footer className="site-footer">
+        <div className="footer-brand">
+          <TesseraMark />
+          <div>
+            <strong>Tessera</strong>
+            <p>Compose together. In real time.</p>
+          </div>
+        </div>
+        <div className="footer-cols">
+          <div>
+            <span>Product</span>
+            <a href="#stage">The stage</a>
+            <a href="#presence">Presence</a>
+            <button type="button" onClick={createRoom}>
+              Open a room
+            </button>
+          </div>
+          <div>
+            <span>Session</span>
+            <p>Anonymous display names. Shared over a room link.</p>
+          </div>
+        </div>
+        <p className="footer-legal">Tessera — collaborative canvas</p>
       </footer>
     </div>
   );
 }
 
-function drawDemoCursor(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  name: string,
-  color: string
-) {
-  ctx.save();
-  ctx.fillStyle = color;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-  ctx.lineWidth = 1;
-
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x + 10, y + 14);
-  ctx.lineTo(x + 4, y + 12);
-  ctx.lineTo(x + 2, y + 18);
-  ctx.lineTo(x, y + 15);
-  ctx.lineTo(x - 1, y + 9);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.font = `600 11px 'Plus Jakarta Sans', sans-serif`;
-  const tw = ctx.measureText(name).width;
-  const labelX = x + 12;
-  const labelY = y + 20;
-  const pad = 6;
-
-  ctx.fillStyle = color;
-  roundRect(ctx, labelX - pad, labelY - 13, tw + pad * 2, 18, 999);
-  ctx.fill();
-
-  ctx.fillStyle = '#000000';
-  ctx.textAlign = 'left';
-  ctx.fillText(name, labelX, labelY - 1);
-  ctx.restore();
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number,
-  r: number
-) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.arcTo(x + w, y, x + w, y + r, r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-  ctx.lineTo(x + r, y + h);
-  ctx.arcTo(x, y + h, x, y + h - r, r);
-  ctx.lineTo(x, y + r);
-  ctx.arcTo(x, y, x + r, y, r);
-  ctx.closePath();
-}
-
-function GitHubIcon() {
+function BeatVisual({ kind }: { kind: string }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z" />
-    </svg>
+    <div className={`beat-visual visual-${kind}`} aria-hidden="true">
+      {kind === 'cursors' && (
+        <>
+          <div className="mini-tile" />
+          <div className="mini-tile t2" />
+          <span className="ghost-cursor c-a">Mira</span>
+          <span className="ghost-cursor c-b">Jules</span>
+        </>
+      )}
+      {kind === 'locks' && (
+        <>
+          <div className="lock-tile">
+            <em>Editing</em>
+            Hero Product
+          </div>
+          <span className="ghost-cursor c-a">Mira</span>
+        </>
+      )}
+      {kind === 'sync' && (
+        <div className="sync-rings">
+          <span />
+          <span />
+          <span />
+        </div>
+      )}
+      {kind === 'invite' && (
+        <div className="invite-chip">
+          tessera.local/room/8f2a…
+        </div>
+      )}
+    </div>
   );
 }
 
-
+function TesseraMark() {
+  return (
+    <svg className="tessera-mark" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M11 1.4 19.4 6v10L11 20.6 2.6 16V6L11 1.4Zm0 2.3L4.8 7.1v7.8L11 18.3l6.2-3.4V7.1L11 3.7Zm0 3.2 3.8 2.1v4.2L11 15.3l-3.8-2.1V9l3.8-2.1Z"
+      />
+    </svg>
+  );
+}
