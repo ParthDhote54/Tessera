@@ -37,7 +37,7 @@ public class RoomController {
     public ResponseEntity<Map<String, Object>> health() {
         return ResponseEntity.ok(Map.of(
                 "status", "ok",
-                "version", "1.0.1-cors-fixed",
+                "version", "1.0.2-cors-filter-fixed",
                 "rooms", roomManager.getRoomCount(),
                 "timestamp", System.currentTimeMillis()
         ));

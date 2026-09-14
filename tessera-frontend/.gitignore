@@ -27,3 +27,5 @@ tessera-backend/*.jar
 Thumbs.db
 *.log
 logs/
+
+.vercel
