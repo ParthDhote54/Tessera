@@ -14,7 +14,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     private final TesseraWebSocketHandler handler;
 
-    @Value("${tessera.cors.allowed-origins:https://personal-finance-manager-frontends.vercel.app,http://localhost:5173,http://localhost:3000}")
+    @Value("${tessera.cors.allowed-origins:https://tessera-frontend-one-eta.vercel.app,https://*.vercel.app,https://personal-finance-manager-frontends.vercel.app,http://localhost:5173,http://localhost:3000}")
     private String allowedOrigins;
 
     public WebSocketConfig(TesseraWebSocketHandler handler) {
