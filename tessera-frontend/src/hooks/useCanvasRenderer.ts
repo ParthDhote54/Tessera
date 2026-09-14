@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { ElementData, RemoteCursor, LocalDragState } from '../types/room';
 import { lerp, toPx } from '../utils/coordinates';
+import { getGridPositions } from '../utils/gridLayout';
 
 const CURSOR_LERP = 0.14;
 const ELEMENT_LERP = 0.10;
@@ -145,79 +146,7 @@ export function useCanvasRenderer(opts: RendererOptions) {
 
 // ── Drawing functions ─────────────────────────────────────────────────────────
 
-interface GridPlacement {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
 
-function calculateGridPositions(W: number, H: number): Record<string, GridPlacement> {
-  const isMobile = W < 768;
-  const isTablet = W >= 768 && W < 1200;
-
-  const containerMaxW = Math.min(1360, W - (isMobile ? 24 : 64));
-  const containerLeft = (W - containerMaxW) / 2;
-  const containerTop = isMobile ? 74 : 96;
-  const padding = isMobile ? 16 : 32;
-  const gap = isMobile ? 16 : 24;
-
-  const innerW = containerMaxW - padding * 2;
-
-  if (isMobile) {
-    const colW = innerW;
-    const heroH = 210;
-    const secH = 135;
-
-    let currentY = containerTop + padding + 12;
-    const hero = { x: containerLeft + padding, y: currentY, w: colW, h: heroH };
-    currentY += heroH + gap;
-
-    const ar = { x: containerLeft + padding, y: currentY, w: colW, h: secH };
-    currentY += secH + gap;
-
-    const cta = { x: containerLeft + padding, y: currentY, w: colW, h: secH };
-    currentY += secH + gap;
-
-    const offer = { x: containerLeft + padding, y: currentY, w: colW, h: secH };
-    currentY += secH + gap;
-
-    const poll = { x: containerLeft + padding, y: currentY, w: colW, h: 175 };
-
-    return { PRODUCT: hero, HOTSPOT: ar, CTA: cta, OFFER: offer, POLL: poll };
-  } else if (isTablet) {
-    const cols = 2;
-    const colW = (innerW - gap) / cols;
-    const row1H = 260;
-    const row2H = 150;
-
-    const hero = { x: containerLeft + padding, y: containerTop + padding + 12, w: colW, h: row1H };
-    const ar = { x: containerLeft + padding + colW + gap, y: containerTop + padding + 12, w: colW, h: (row1H - gap) / 2 };
-    const cta = { x: containerLeft + padding + colW + gap, y: containerTop + padding + 12 + (row1H - gap) / 2 + gap, w: colW, h: (row1H - gap) / 2 };
-
-    const y2 = containerTop + padding + 12 + row1H + gap;
-    const offer = { x: containerLeft + padding, y: y2, w: colW, h: row2H };
-    const poll = { x: containerLeft + padding + colW + gap, y: y2, w: colW, h: row2H };
-
-    return { PRODUCT: hero, HOTSPOT: ar, CTA: cta, OFFER: offer, POLL: poll };
-  } else {
-    // Desktop 3-column balanced grid
-    const cols = 3;
-    const colW = (innerW - gap * 2) / cols;
-    const row1H = 280;
-    const row2H = 160;
-
-    const hero = { x: containerLeft + padding, y: containerTop + padding + 12, w: colW, h: row1H };
-    const ar = { x: containerLeft + padding + (colW + gap), y: containerTop + padding + 12, w: colW, h: row1H };
-    const cta = { x: containerLeft + padding + (colW + gap) * 2, y: containerTop + padding + 12, w: colW, h: row1H };
-
-    const yRow2 = containerTop + padding + 12 + row1H + gap;
-    const offer = { x: containerLeft + padding, y: yRow2, w: colW, h: row2H };
-    const poll = { x: containerLeft + padding + (colW + gap), y: yRow2, w: colW * 2 + gap, h: row2H };
-
-    return { PRODUCT: hero, HOTSPOT: ar, CTA: cta, OFFER: offer, POLL: poll };
-  }
-}
 
 function drawStageBackground(ctx: CanvasRenderingContext2D, W: number, H: number) {
   // Rich dark background with clean radial gradient
@@ -288,7 +217,7 @@ function drawElement(
   isOwnDrag: boolean,
   now: number
 ) {
-  const gridPositions = calculateGridPositions(W, H);
+  const gridPositions = getGridPositions(W, H);
   const gridPos = gridPositions[el.type];
 
   const px = gridPos ? Math.round(gridPos.x) : Math.round(toPx(normX, W));

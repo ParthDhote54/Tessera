@@ -2,6 +2,7 @@ import { useRef, useCallback } from 'react';
 import { ElementData, LocalDragState } from '../types/room';
 import { toNorm, clamp } from '../utils/coordinates';
 import { ClientMessage } from '../types/events';
+import { getGridPositions } from '../utils/gridLayout';
 
 const CURSOR_THROTTLE_MS = 16;
 const OBJECT_MOVE_THROTTLE_MS = 33;
@@ -45,16 +46,34 @@ export function useElementInteraction(opts: ElementInteractionOptions) {
   }, [stageRef, stageWidthRef, stageHeightRef]);
 
   const hitTest = useCallback((nx: number, ny: number): ElementData | null => {
+    const canvas = stageRef.current;
+    if (!canvas) return null;
+    const W = stageWidthRef.current ?? canvas.getBoundingClientRect().width;
+    const H = stageHeightRef.current ?? canvas.getBoundingClientRect().height;
+    // Convert pointer to pixel space — same space drawElement uses
+    const px = nx * W;
+    const py = ny * H;
+
     const elements = getElements();
+    const gridPositions = getGridPositions(W, H);
+
     let topmost: ElementData | null = null;
     elements.forEach(el => {
-      if (nx >= el.x && nx <= el.x + el.width &&
-          ny >= el.y && ny <= el.y + el.height) {
+      const grid = gridPositions[el.type];
+      let ex: number, ey: number, ew: number, eh: number;
+      if (grid) {
+        // Element is drawn at grid pixel position — test against that
+        ex = grid.x; ey = grid.y; ew = grid.w; eh = grid.h;
+      } else {
+        // Fallback: element uses its own normalized coords
+        ex = el.x * W; ey = el.y * H; ew = el.width * W; eh = el.height * H;
+      }
+      if (px >= ex && px <= ex + ew && py >= ey && py <= ey + eh) {
         topmost = el;
       }
     });
     return topmost;
-  }, [getElements]);
+  }, [stageRef, stageWidthRef, stageHeightRef, getElements]);
 
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     const { nx, ny } = stageCoords(e);
