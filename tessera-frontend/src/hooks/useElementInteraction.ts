@@ -122,7 +122,7 @@ export function useElementInteraction(opts: ElementInteractionOptions) {
     const offsetX = nx - el.x;
     const offsetY = ny - el.y;
 
-    const drag: LocalDragState = { elementId: el.id, offsetX, offsetY, locked: false };
+    const drag: LocalDragState = { elementId: el.id, offsetX, offsetY, locked: true };
     setDragState(drag);
 
     // Request lock from server
