@@ -23,22 +23,8 @@ public class CorsFilterConfig {
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public CorsFilter corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-
-        Set<String> patterns = new HashSet<>(Arrays.asList(allowedOriginsEnv.split(",")));
-        patterns.add("https://tessera-frontend-one-eta.vercel.app");
-        patterns.add("https://*.vercel.app");
-        patterns.add("https://personal-finance-manager-frontends.vercel.app");
-        patterns.add("http://localhost:5173");
-        patterns.add("http://localhost:3000");
-
-        List<String> patternList = patterns.stream()
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
-
-        config.setAllowedOriginPatterns(patternList);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.addAllowedOriginPattern("*");
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
