@@ -9,8 +9,6 @@ services:
     envVars:
       - key: PORT
         value: 10000
-      - key: tessera.cors.allowed-origins
-        value: "https://tessera-frontend-one-eta.vercel.app,https://*.vercel.app,https://personal-finance-manager-frontends.vercel.app,http://localhost:5173,http://localhost:3000"
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://tessera-frontend-one-eta.vercel.app,https://*.vercel.app,https://personal-finance-manager-frontends.vercel.app,http://localhost:5173,http://localhost:3000"
+        value: "https://tessera-frontend-one-eta.vercel.app,http://localhost:5173,http://localhost:3000"
     healthCheckPath: /api/health
